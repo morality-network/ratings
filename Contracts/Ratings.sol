@@ -3,6 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.sol";
+import "https://github.com/morality-network/ratings/Contracts/Models/Models.sol";
 
 /**
 
@@ -14,43 +15,11 @@ import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.so
 
 contract Ratings is Ownable{
 
-    struct Rating {
-       address User;
-       string Site;
-       uint256 Field1;
-       uint256 Field2;
-       uint256 Field3;
-       uint256 Field4;
-       uint256 Field5;
-    }
-
-    struct AggregateRating {
-       uint256 Field1Total;
-       uint256 Field2Total;
-       uint256 Field3Total;
-       uint256 Field4Total;
-       uint256 Field5Total;
-       uint256 Count;
-    }
-
-    struct Index {
-        uint256 Position;
-        bool Exists;
-    }
-
-    struct RatingDto{
-       uint256 Field1;
-       uint256 Field2;
-       uint256 Field3;
-       uint256 Field4;
-       uint256 Field5;
-    }
-
     // Sites total ratings
-    mapping(string => AggregateRating) private _siteAggregates;
+    mapping(string => Models.AggregateRating) private _siteAggregates;
 
     // All user/site ratings
-    Rating[] private _allRatings;
+    Models.Rating[] private _allRatings;
 
     // Sites individual rating indexes
     mapping(string => uint256[]) private _siteRatingIndexes;
@@ -61,7 +30,7 @@ contract Ratings is Ownable{
     mapping(address => uint256) private _userRatingCounts;
 
     // Index mapping for sites/users individual ratings
-    mapping(address => mapping(string => Index)) private _userSiteRatingsIndex;
+    mapping(address => mapping(string => Models.Index)) private _userSiteRatingsIndex;
 
     uint256 private _pageLimit = 50;
 
@@ -70,15 +39,15 @@ contract Ratings is Ownable{
     event PageLimitUpdatedEvent(uint256 indexed newPageLimit, uint256 time);
 
     // Add a new or replace and existing rating
-    function addRating(string memory site, RatingDto memory rating) public {
+    function addRating(string memory site, Models.RatingDto memory rating) public {
         // Validate url 
         require(UrlUtils.validateUrl(site));
 
         // We check if there is already an index for this site/user
-        Index memory userSiteRatingIndex = _userSiteRatingsIndex[msg.sender][site];
+        Models.Index memory userSiteRatingIndex = _userSiteRatingsIndex[msg.sender][site];
 
         // Map to correct model
-        Rating memory mappedRating = _mapRatingDto(site, rating);
+        Models.Rating memory mappedRating = _mapRatingDto(site, rating);
 
         // If it already exists then edit the existing
         if(userSiteRatingIndex.Exists == true) _editRating(site, mappedRating);
@@ -88,12 +57,12 @@ contract Ratings is Ownable{
     }
 
     // Gets an aggregate rating for a site
-    function GetRating(string memory site) public view returns(AggregateRating memory aggregateRating){
+    function GetRating(string memory site) public view returns(Models.AggregateRating memory aggregateRating){
         aggregateRating = _siteAggregates[site];
     }
 
     // Get a page of users ratings 
-    function getUserRatings(address userAddress, uint256 pageNumber, uint256 perPage) public view returns(Rating[] memory ratings){
+    function getUserRatings(address userAddress, uint256 pageNumber, uint256 perPage) public view returns(Models.Rating[] memory ratings){
         // Validate page limit
         require(perPage <= _pageLimit, "Page limit exceeded");
 
@@ -108,7 +77,7 @@ contract Ratings is Ownable{
         uint256 pageSize = ((startingIndex+1)>totalRatings) ? 0 : (remaining < perPage) ? remaining : perPage;
 
         // Create the page
-        Rating[] memory pageOfRatings = new Rating[](pageSize);
+        Models.Rating[] memory pageOfRatings = new Models.Rating[](pageSize);
 
         // Add each item to the page
         uint256 pageItemIndex = 0;
@@ -117,7 +86,7 @@ contract Ratings is Ownable{
            uint256 index = _userRatingIndexes[userAddress][i];
 
            // Get the rating 
-           Rating memory rating = _allRatings[index];
+           Models.Rating memory rating = _allRatings[index];
 
            // Add to page
            pageOfRatings[pageItemIndex] = rating;
@@ -130,7 +99,7 @@ contract Ratings is Ownable{
     }
 
     // Get a page of a sites ratings - pageNumber starts from 0
-    function getSiteRatings(string memory site, uint256 pageNumber, uint256 perPage) public view returns(Rating[] memory ratings){
+    function getSiteRatings(string memory site, uint256 pageNumber, uint256 perPage) public view returns(Models.Rating[] memory ratings){
         // Validate page limit
         require(perPage <= _pageLimit, "Page limit exceeded");
 
@@ -145,7 +114,7 @@ contract Ratings is Ownable{
         uint256 pageSize = ((startingIndex+1)>totalRatings) ? 0 : (remaining < perPage) ? remaining : perPage;
 
         // Create the page
-        Rating[] memory pageOfRatings = new Rating[](pageSize);
+        Models.Rating[] memory pageOfRatings = new Models.Rating[](pageSize);
 
         // Add each item to the page
         uint256 pageItemIndex = 0;
@@ -154,7 +123,7 @@ contract Ratings is Ownable{
            uint256 index = _siteRatingIndexes[site][i];
 
            // Get the rating
-           Rating memory rating = _allRatings[index];
+           Models.Rating memory rating = _allRatings[index];
 
            // Add to page
            pageOfRatings[pageItemIndex] = rating;
@@ -167,7 +136,7 @@ contract Ratings is Ownable{
     }
 
     // Get a page ratings - pageNumber starts from 0
-    function getRatings(uint256 pageNumber, uint256 perPage) public view returns(Rating[] memory ratings){
+    function getRatings(uint256 pageNumber, uint256 perPage) public view returns(Models.Rating[] memory ratings){
         // Validate page limit
         require(perPage <= _pageLimit, "Page limit exceeded");
 
@@ -182,13 +151,13 @@ contract Ratings is Ownable{
         uint256 pageSize = ((startingIndex+1)>totalRatings) ? 0 : (remaining < perPage) ? remaining : perPage;
 
         // Create the page
-        Rating[] memory pageOfRatings = new Rating[](pageSize);
+        Models.Rating[] memory pageOfRatings = new Models.Rating[](pageSize);
 
         // Add each item to the page
         uint256 pageItemIndex = 0;
         for(uint256 i = startingIndex;i < (startingIndex + pageSize);i++){
            // Get the rating
-           Rating memory rating = _allRatings[i];
+           Models.Rating memory rating = _allRatings[i];
 
            // Add to page
            pageOfRatings[pageItemIndex] = rating;
@@ -236,7 +205,7 @@ contract Ratings is Ownable{
     // Helpers
 
     // Create a new rating for a site/user
-    function _createRating(string memory site, Rating memory rating) private {
+    function _createRating(string memory site, Models.Rating memory rating) private {
         // Update the total rating for the site
         _updateSiteAggregate(site, rating);
 
@@ -258,7 +227,7 @@ contract Ratings is Ownable{
        _userRatingCounts[msg.sender] = userRatings.length;
 
        // Add index
-       Index memory userSiteIndex = Index(_allRatings.length-1, true);
+       Models.Index memory userSiteIndex = Models.Index(_allRatings.length-1, true);
        _userSiteRatingsIndex[msg.sender][site] = userSiteIndex;
 
        // Fire event
@@ -266,13 +235,13 @@ contract Ratings is Ownable{
     }
 
     // Create a new rating for a site/user
-    function _editRating(string memory site, Rating memory rating) private {
+    function _editRating(string memory site, Models.Rating memory rating) private {
         // Get the index of the user/site rating
-        Index memory userIndex = _userSiteRatingsIndex[msg.sender][site];
+        Models.Index memory userIndex = _userSiteRatingsIndex[msg.sender][site];
 
         // Get the users existing rating for the site
         uint256 oldRatingIndex = _userRatingIndexes[msg.sender][userIndex.Position];
-        Rating storage oldRating = _allRatings[oldRatingIndex];
+        Models.Rating storage oldRating = _allRatings[oldRatingIndex];
 
         // Remove old value
         _removeSiteAggregate(site, oldRating);
@@ -293,9 +262,9 @@ contract Ratings is Ownable{
     }
 
     // Update the total ratings for a site
-    function _updateSiteAggregate(string memory site, Rating memory rating) private{
+    function _updateSiteAggregate(string memory site, Models.Rating memory rating) private{
         // Get the aggregate to update
-        AggregateRating storage aggregateRating = _siteAggregates[site];
+        Models.AggregateRating storage aggregateRating = _siteAggregates[site];
 
         // Update the aggregate with extra info
         aggregateRating.Field1Total += rating.Field1;
@@ -309,9 +278,9 @@ contract Ratings is Ownable{
     }
 
     // Update the total ratings for a site
-    function _removeSiteAggregate(string memory site, Rating memory oldRating) private{
+    function _removeSiteAggregate(string memory site, Models.Rating memory oldRating) private{
         // Get the aggregate to update
-        AggregateRating storage aggregateRating = _siteAggregates[site];
+        Models.AggregateRating storage aggregateRating = _siteAggregates[site];
 
         aggregateRating.Field1Total -= oldRating.Field1;
         aggregateRating.Field2Total -= oldRating.Field2;
@@ -323,8 +292,8 @@ contract Ratings is Ownable{
     }
 
     // Map CreateRating to Rating
-    function _mapRatingDto(string memory site, RatingDto memory createRating) private view returns(Rating memory rating){
-         return Rating(
+    function _mapRatingDto(string memory site, Models.RatingDto memory createRating) private view returns(Models.Rating memory rating){
+         return Models.Rating(
             msg.sender,
             site,
             createRating.Field1,

@@ -6,6 +6,7 @@ import '@chainlink/contracts/src/v0.8/ConfirmedOwner.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.sol";
+import "https://github.com/morality-network/ratings/Contracts/Models/Models.sol";
 
 /**
  * @title SiteOwners
@@ -19,20 +20,14 @@ contract SiteOwners is ChainlinkClient, Ownable {
     bytes32 private _jobId;
     uint256 private _fee;
 
-    struct SiteOwner{
-        string Site;
-        address Owner;
-        bool Exists;
-    }
-
     // The list of all site owners 1:1 map
     mapping(string => address) private _siteOwners; 
     
     // The site owner list (history of all)
-    SiteOwner[] _allSiteOwners;
+    Models.SiteOwner[] _allSiteOwners;
 
     // Site owner requests (not confirmed)
-    mapping(address => SiteOwner) private _siteOwnerRequests; 
+    mapping(address => Models.SiteOwner) private _siteOwnerRequests; 
 
     // The extension added to site to validate ownership (expose { "address" : "0x0000000000000000000000000000000000000000" }
     string private _extension = "/owner-address";
@@ -71,7 +66,7 @@ contract SiteOwners is ChainlinkClient, Ownable {
         _link.transferFrom(msg.sender, address(this), _fee);
 
         // Add the request
-        _siteOwnerRequests[msg.sender] = SiteOwner(site, msg.sender, true); 
+        _siteOwnerRequests[msg.sender] = Models.SiteOwner(site, msg.sender, true); 
 
         Chainlink.Request memory request = buildChainlinkRequest(_jobId, address(this), this.fulfill.selector);
 
@@ -104,7 +99,7 @@ contract SiteOwners is ChainlinkClient, Ownable {
     }
 
     // Get a page of a sites owners - pageNumber starts from 0
-    function getSiteOwners(uint256 pageNumber, uint256 perPage) public view returns(SiteOwner[] memory siteOwners){
+    function getSiteOwners(uint256 pageNumber, uint256 perPage) public view returns(Models.SiteOwner[] memory siteOwners){
         // Validate page limit
         require(perPage <= _pageLimit, "Page limit exceeded");
 
@@ -119,13 +114,13 @@ contract SiteOwners is ChainlinkClient, Ownable {
         uint256 pageSize = ((startingIndex+1)>totalSiteOwners) ? 0 : (remaining < perPage) ? remaining : perPage;
 
         // Create the page
-        SiteOwner[] memory pageOfSiteOwners = new SiteOwner[](pageSize);
+        Models.SiteOwner[] memory pageOfSiteOwners = new Models.SiteOwner[](pageSize);
 
         // Add each item to the page
         uint256 pageItemIndex = 0;
         for(uint256 i = startingIndex;i < (startingIndex + pageSize);i++){
            // Get the siteOwner
-           SiteOwner memory siteOwner = _allSiteOwners[i];
+           Models.SiteOwner memory siteOwner = _allSiteOwners[i];
 
            // Add to page
            pageOfSiteOwners[pageItemIndex] = siteOwner;
@@ -178,7 +173,7 @@ contract SiteOwners is ChainlinkClient, Ownable {
     */
     function fulfill(bytes32 _requestId, address _owner) public recordChainlinkFulfillment (_requestId)
     {
-        SiteOwner memory siteOwnerRequest = _siteOwnerRequests[_owner];
+        Models.SiteOwner memory siteOwnerRequest = _siteOwnerRequests[_owner];
         if(siteOwnerRequest.Exists && siteOwnerRequest.Owner == _owner){
             _siteOwners[siteOwnerRequest.Site] = _owner;
     

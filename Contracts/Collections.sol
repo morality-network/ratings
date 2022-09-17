@@ -3,17 +3,8 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-// Contract to confirm user/site rating counts for payouts
-interface IRatings{
-    function getTotalUserRatings(address userAddress) external view returns(uint256 total);
-    function getTotalSiteRatings(string memory site) external view returns(uint256 total);
-}
-
-// Contract to confirm a site ownership from
-interface ISiteOwners{
-    function getSiteOwner(string memory site) external view returns(address);
-}
+import "https://github.com/morality-network/ratings/Contracts/Interfaces/IRatings.sol";
+import "https://github.com/morality-network/ratings/Contracts/Interfaces/ISiteOwners.sol";
 
 /**
  * @title Ratings
