@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.8.0.0;
+pragma solidity >=0.8.12.0;
 
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
@@ -73,7 +73,7 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
         Chainlink.Request memory request = buildChainlinkRequest(_jobId, address(this), this.fulfill.selector);
 
         // Set the URL to perform the GET request on
-        request.add("get", site);
+        request.add("get", string.concat(site, _extension));
 
         // Specify the path for retrieving the data
         request.add("path", "address");
