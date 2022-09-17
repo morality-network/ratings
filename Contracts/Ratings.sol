@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >=0.8.0.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.sol";
+import "https://github.com/morality-network/ratings/Contracts/Libraries/TimeUtils.sol";
+import "https://github.com/morality-network/ratings/Contracts/Libraries/UrlUtils.sol";
 import "https://github.com/morality-network/ratings/Contracts/Models/Models.sol";
 import "https://github.com/morality-network/ratings/Contracts/Interfaces/IRatings.sol";
 
 /**
-
- * @title Ratings
-
+* @title Ratings
 * @dev Persists and manages ratings across the internet
-
 */
 
 contract Ratings is Ownable, IRatings{
@@ -58,7 +56,7 @@ contract Ratings is Ownable, IRatings{
     }
 
     // Gets an aggregate rating for a site
-    function GetRating(string memory site) public view returns(Models.AggregateRating memory aggregateRating){
+    function getRating(string memory site) public view returns(Models.AggregateRating memory aggregateRating){
         aggregateRating = _siteAggregates[site];
     }
 
@@ -200,7 +198,7 @@ contract Ratings is Ownable, IRatings{
          _pageLimit = newPageLimit;
 
          // Fire update event
-         emit PageLimitUpdatedEvent(newPageLimit, block.timestamp);
+         emit PageLimitUpdatedEvent(newPageLimit, TimeUtils.getTimestamp());
     }
 
     // Helpers
@@ -232,7 +230,7 @@ contract Ratings is Ownable, IRatings{
        _userSiteRatingsIndex[msg.sender][site] = userSiteIndex;
 
        // Fire event
-       emit AddedRating(site, msg.sender, rating.Field1, rating.Field2, rating.Field3, rating.Field4, rating.Field5, block.timestamp);
+       emit AddedRating(site, msg.sender, rating.Field1, rating.Field2, rating.Field3, rating.Field4, rating.Field5, TimeUtils.getTimestamp());
     }
 
     // Create a new rating for a site/user
@@ -259,7 +257,7 @@ contract Ratings is Ownable, IRatings{
 
        // Fire event
        emit EditedRating(site, msg.sender, rating.Field1, rating.Field2, rating.Field3, rating.Field4, 
-            rating.Field5, block.timestamp);
+            rating.Field5, TimeUtils.getTimestamp());
     }
 
     // Update the total ratings for a site

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity >=0.8.0.0;
 
-import '@chainlink/contracts/src/v0.8/ChainlinkClient.sol';
-import '@chainlink/contracts/src/v0.8/ConfirmedOwner.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
+import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.sol";
+import "https://github.com/morality-network/ratings/Contracts/Libraries/TimeUtils.sol";
+import "https://github.com/morality-network/ratings/Contracts/Libraries/UrlUtils.sol";
 import "https://github.com/morality-network/ratings/Contracts/Models/Models.sol";
 import "https://github.com/morality-network/ratings/Contracts/Interfaces/ISiteOwners.sol";
 
@@ -25,7 +26,7 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
     mapping(string => address) private _siteOwners; 
     
     // The site owner list (history of all)
-    Models.SiteOwner[] _allSiteOwners;
+    Models.SiteOwner[] private _allSiteOwners;
 
     // Site owner requests (not confirmed)
     mapping(address => Models.SiteOwner) private _siteOwnerRequests; 
@@ -80,7 +81,7 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
         // Sends the request
         requestId = sendChainlinkRequestTo(_oracle, request, _fee);
 
-        emit SiteOwnerRequestAddedEvent(site, msg.sender, requestId, block.timestamp);
+        emit SiteOwnerRequestAddedEvent(site, msg.sender, requestId, TimeUtils.getTimestamp());
         
         return requestId;
     }
@@ -148,7 +149,7 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
          _extension = newExtension;
 
          // Fire update event
-         emit ExtensionUpdatedEvent(newExtension, block.timestamp);
+         emit ExtensionUpdatedEvent(newExtension, TimeUtils.getTimestamp());
     }
 
     /**
@@ -166,7 +167,7 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
          _pageLimit = newPageLimit;
 
          // Fire update event
-         emit PageLimitUpdatedEvent(newPageLimit, block.timestamp);
+         emit PageLimitUpdatedEvent(newPageLimit, TimeUtils.getTimestamp());
     }
 
     /**
@@ -178,10 +179,10 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
         if(siteOwnerRequest.Exists && siteOwnerRequest.Owner == _owner){
             _siteOwners[siteOwnerRequest.Site] = _owner;
     
-            emit SiteOwnerAddedEvent(siteOwnerRequest.Site, _owner, _requestId, block.timestamp);
+            emit SiteOwnerAddedEvent(siteOwnerRequest.Site, _owner, _requestId, TimeUtils.getTimestamp());
         }
         else{
-            emit SiteOwnerFailedEvent(_requestId, block.timestamp);
+            emit SiteOwnerFailedEvent(_requestId, TimeUtils.getTimestamp());
         }
     }
 }

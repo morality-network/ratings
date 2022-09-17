@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >=0.8.0.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "https://github.com/morality-network/ratings/Contracts/Libraries/TimeUtils.sol";
+import "https://github.com/morality-network/ratings/Contracts/Libraries/UrlUtils.sol";
 import "https://github.com/morality-network/ratings/Contracts/Interfaces/IRatings.sol";
 import "https://github.com/morality-network/ratings/Contracts/Interfaces/ISiteOwners.sol";
 
@@ -13,27 +15,27 @@ import "https://github.com/morality-network/ratings/Contracts/Interfaces/ISiteOw
 
 contract Collections is Ownable {
     // Supporting contract definitions
-    IRatings _ratings;
-    ISiteOwners _siteOwners;
-    IERC20 _token;
+    IRatings private _ratings;
+    ISiteOwners private _siteOwners;
+    IERC20 private _token;
 
     // Record of whats been paid out
-    mapping(address => uint256) _userPayouts;
-    mapping(string => uint256) _sitePayouts;
+    mapping(address => uint256) private _userPayouts;
+    mapping(string => uint256) private _sitePayouts;
 
     // Multiplier for fee
-    uint256 _multiplier = 1000000000; // 1 Gwei default
+    uint256 private _multiplier = 1000000000; // 1 Gwei default
 
     // The contract events
     event UserPayout(address indexed user, uint256 indexed payoutAmount, uint256 indexed multiplier, uint256 time);
     event SitePayout(address indexed user, string indexed site, uint256 indexed payoutAmount, uint256 multiplier, uint256 time);
     event MultiplierUpdatedEvent(uint256 indexed newMultiplier, uint256 time);
 
-    constructor(){
+    constructor (address ratingsContractAddress, address siteOwnersContractAddress, address payoutTokenAddress){
         // TODO sort out
-        _ratings = IRatings(0x0000000000000000000000000000000000000000);
-        _siteOwners = ISiteOwners(0x0000000000000000000000000000000000000000);
-        _token = IERC20(0x0000000000000000000000000000000000000000);
+        _ratings = IRatings(ratingsContractAddress);
+        _siteOwners = ISiteOwners(siteOwnersContractAddress);
+        _token = IERC20(payoutTokenAddress);
     }
 
     //
@@ -58,7 +60,7 @@ contract Collections is Ownable {
         _token.transfer(address(this), realizedPayoutValue);
 
         // Emit event
-        emit UserPayout(msg.sender, realizedPayoutValue, _multiplier, block.timestamp);
+        emit UserPayout(msg.sender, realizedPayoutValue, _multiplier, TimeUtils.getTimestamp());
     }
 
     function lootSite(string memory site) public{
@@ -86,7 +88,7 @@ contract Collections is Ownable {
         _token.transfer(address(this), realizedPayoutValue);
 
         // Emit event
-        emit SitePayout(msg.sender, site, realizedPayoutValue, _multiplier, block.timestamp);
+        emit SitePayout(msg.sender, site, realizedPayoutValue, _multiplier, TimeUtils.getTimestamp());
     } 
 
     function getWhatsOwedToUser(address owner) public view returns(uint256){
@@ -134,11 +136,11 @@ contract Collections is Ownable {
          _multiplier = newMultiplier;
 
          // Fire update event
-         emit MultiplierUpdatedEvent(newMultiplier, block.timestamp);
+         emit MultiplierUpdatedEvent(newMultiplier, TimeUtils.getTimestamp());
     }
 
     // Recover tokens to the owner
-    function recoverTokens(IERC20 token, uint256 amount) onlyOwner public {
+    function recoverTokens(IERC20 token, uint256 amount) public onlyOwner {
         // Ensure there is a balance in this contract for the token specified
         require(token.balanceOf(address(this)) >= amount, "Not enough of token in contract, reduce the amount");
 
