@@ -21,15 +21,18 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
     address private _oracle;
     bytes32 private _jobId;
     uint256 private _fee;
-
-    // The list of all site owners 1:1 map
-    mapping(string => address) private _siteOwners; 
     
     // The site owner list (history of all)
     Models.SiteOwner[] private _allSiteOwners;
 
+    // The site owner request list (history of all)
+    Models.SiteOwnerRequest[] private _allSiteOwnerRequests;
+
+    // The list of all site owners 1:1 map
+    mapping(string => uint256) private _siteOwnerIndexes; 
+
     // Site owner requests (not confirmed)
-    mapping(address => Models.SiteOwner) private _siteOwnerRequests; 
+    mapping(bytes32 => uint256) private _currentSiteOwnerRequestIndexes; 
 
     // The extension added to site to validate ownership (expose { "address" : "0x0000000000000000000000000000000000000000" }
     string private _extension = "/owner-address";
@@ -67,9 +70,6 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
         // Get link to make transaction (user must have approved it first)
         _link.transferFrom(msg.sender, address(this), _fee);
 
-        // Add the request
-        _siteOwnerRequests[msg.sender] = Models.SiteOwner(site, msg.sender, true); 
-
         Chainlink.Request memory request = buildChainlinkRequest(_jobId, address(this), this.fulfill.selector);
 
         // Set the URL to perform the GET request on
@@ -81,6 +81,12 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
         // Sends the request
         requestId = sendChainlinkRequestTo(_oracle, request, _fee);
 
+        // Add to the total requests made
+        _allSiteOwnerRequests.push(Models.SiteOwnerRequest(site, msg.sender, true, false));
+
+        // Add the request
+        _currentSiteOwnerRequestIndexes[requestId] = (_allSiteOwnerRequests.length -1); 
+
         emit SiteOwnerRequestAddedEvent(site, msg.sender, requestId, TimeUtils.getTimestamp());
         
         return requestId;
@@ -89,8 +95,30 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
     /**
     * Get the site owner
     */
-    function getSiteOwner(string memory site) external override view returns(address){
-        return _siteOwners[site];
+    function getSiteOwner(string memory site) external override view returns(Models.SiteOwner memory siteOwner){
+        // Get index of where the site owner is in the central list
+        uint256 index = _siteOwnerIndexes[site];
+
+        // Check to see if site owners exist
+        if(_allSiteOwners.length == 0)
+            return siteOwner;
+
+        // Use index to get site owner
+        siteOwner = _allSiteOwners[index];
+
+        // Return it if sites match
+        if(StringUtils.compareStrings(siteOwner.Site, site))
+            return siteOwner;
+
+        // Index was not matched
+        siteOwner = Models.SiteOwner('',address(0),false); 
+    }
+
+    /**
+    * Get the total site owner requests
+    */
+    function getTotalSiteOwnerRequests() public view returns(uint256){
+        return _allSiteOwnerRequests.length;
     }
 
     /**
@@ -123,6 +151,40 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
         for(uint256 i = startingIndex;i < (startingIndex + pageSize);i++){
            // Get the siteOwner
            Models.SiteOwner memory siteOwner = _allSiteOwners[i];
+
+           // Add to page
+           pageOfSiteOwners[pageItemIndex] = siteOwner;
+
+           // Increment page item index
+           pageItemIndex++;
+        }
+
+        return pageOfSiteOwners;
+    }
+
+     // Get a page of a sites owners - pageNumber starts from 0
+    function getSiteOwnerRequests(uint256 pageNumber, uint256 perPage) public view returns(Models.SiteOwnerRequest[] memory siteOwners){
+        // Validate page limit
+        require(perPage <= _pageLimit, "Page limit exceeded");
+
+        // Get the total amount remaining
+        uint256 totalSiteOwnerRequests = getTotalSiteOwnerRequests();
+
+        // Get the index to start from
+        uint256 startingIndex = pageNumber * perPage;
+
+        // The number of site owners that will be returned (to set array)
+        uint256 remaining = totalSiteOwnerRequests - startingIndex;
+        uint256 pageSize = ((startingIndex+1)>totalSiteOwnerRequests) ? 0 : (remaining < perPage) ? remaining : perPage;
+
+        // Create the page
+        Models.SiteOwnerRequest[] memory pageOfSiteOwners = new Models.SiteOwnerRequest[](pageSize);
+
+        // Add each item to the page
+        uint256 pageItemIndex = 0;
+        for(uint256 i = startingIndex;i < (startingIndex + pageSize);i++){
+           // Get the siteOwner
+           Models.SiteOwnerRequest memory siteOwner = _allSiteOwnerRequests[i];
 
            // Add to page
            pageOfSiteOwners[pageItemIndex] = siteOwner;
@@ -175,14 +237,52 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
     */
     function fulfill(bytes32 _requestId, address _owner) public recordChainlinkFulfillment (_requestId)
     {
-        Models.SiteOwner memory siteOwnerRequest = _siteOwnerRequests[_owner];
-        if(siteOwnerRequest.Exists && siteOwnerRequest.Owner == _owner){
-            _siteOwners[siteOwnerRequest.Site] = _owner;
-    
+        // Match the request
+        uint256 index =  _currentSiteOwnerRequestIndexes[_requestId];
+        Models.SiteOwnerRequest storage siteOwnerRequest = _allSiteOwnerRequests[index];
+
+        // If owner taken from extension matches the request owner then owner can be set
+        if(siteOwnerRequest.Exists && siteOwnerRequest.Owner == _owner){  
+            // Get the site owner index of site    
+            uint256 siteOwnerIndex = _addOrUpdateSiteOwner(siteOwnerRequest.Site, siteOwnerRequest.Owner);
+
+            // Site owner is confirmed - added to site mapping
+            _siteOwnerIndexes[siteOwnerRequest.Site] = siteOwnerIndex;
+
+            // Confirm request
+            siteOwnerRequest.Confirmed = true;
+
+            // Fire event
             emit SiteOwnerAddedEvent(siteOwnerRequest.Site, _owner, _requestId, TimeUtils.getTimestamp());
         }
         else{
+            // Deny request
+            siteOwnerRequest.Confirmed = false;
+
+            // Fire event
             emit SiteOwnerFailedEvent(_requestId, TimeUtils.getTimestamp());
         }
+    }
+
+    function _addOrUpdateSiteOwner(string memory site, address owner) private returns(uint256){
+        // Get index of where the site owner is in the central list
+        uint256 index = _siteOwnerIndexes[site];
+
+        // Get site owner
+        Models.SiteOwner storage siteOwner = _allSiteOwners[index];
+
+        // Check to see if site owners exist
+        if(_allSiteOwners.length == 0 || !StringUtils.compareStrings(siteOwner.Site, site))
+        {
+            // Add to the total site owner
+            _allSiteOwners.push(Models.SiteOwner(site, owner, true));
+
+            return (_allSiteOwners.length -1);
+        }
+
+        // Update not create
+        siteOwner.Owner = owner;
+
+        return index;
     }
 }

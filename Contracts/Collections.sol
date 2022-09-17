@@ -65,8 +65,8 @@ contract Collections is Ownable {
 
     function lootSite(string memory site) public{
         // Check caller is owner
-        address owner = _siteOwners.getSiteOwner(site);
-        require(owner == msg.sender, "Only owner can loot site");
+        Models.SiteOwner memory owner = _siteOwners.getSiteOwner(site);
+        require(owner.Owner == msg.sender, "Only owner can loot site");
 
         // Get the total ratings count for a site
         uint256 siteRatingCount = _ratings.getTotalSiteRatings(site);
