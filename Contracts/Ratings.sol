@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.sol";
 
 /**
 
@@ -67,11 +68,11 @@ contract Ratings is Ownable{
     event AddedRating(string indexed site, address indexed user, uint256 rating1, uint256 rating2, uint256 rating3, uint256 rating4, uint256 rating5, uint256 time);
     event EditedRating(string indexed site, address indexed user, uint256 newRating1, uint256 newRating2, uint256 newRating3, uint256 newRating4, uint256 newRating5, uint256 time);
     event PageLimitUpdatedEvent(uint256 indexed newPageLimit, uint256 time);
-    
+
     // Add a new or replace and existing rating
     function addRating(string memory site, RatingDto memory rating) public {
         // Validate url 
-        require(_validateUrl(site));
+        require(UrlUtils.validateUrl(site));
 
         // We check if there is already an index for this site/user
         Index memory userSiteRatingIndex = _userSiteRatingsIndex[msg.sender][site];
@@ -333,34 +334,4 @@ contract Ratings is Ownable{
             createRating.Field5
          );
     }
-
-    function _validateUrl(string memory url) public pure returns(bool){
-        // ie. 'https://www.a.a' (15 in length)
-        uint256 urlLength = bytes(url).length;
-        require(urlLength >= 15, "Length of url must be minimum 15 characters ie. 'https://www.a.a'");
-        
-        // ie. 'https://www.a.a' -> MUST include 'https://www.'
-        string memory firstSection = substring(url, 0, 12);
-        require(compareStrings(firstSection, "https://www."), "Url must start with 'https://www.'");
-
-        // ie. 'https://www.a.a/' -> Don't include '/' at end
-        string memory lastCharacter = substring(url, urlLength-1, urlLength);
-        require(compareStrings(lastCharacter, "/") == false, "Url must not end with '/'");
-
-        return true;
-    }
-
-    function compareStrings(string memory a, string memory b) public pure returns (bool) {
-        return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
-    }
-
-    function substring(string memory str, uint startIndex, uint endIndex) public pure returns (string memory) {
-        bytes memory strBytes = bytes(str);
-        bytes memory result = new bytes(endIndex-startIndex);
-        for(uint i = startIndex; i < endIndex; i++) {
-            result[i-startIndex] = strBytes[i];
-        }
-        return string(result);
-    }
-
 }

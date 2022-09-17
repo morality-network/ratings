@@ -5,6 +5,7 @@ import '@chainlink/contracts/src/v0.8/ChainlinkClient.sol';
 import '@chainlink/contracts/src/v0.8/ConfirmedOwner.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.sol";
 
 /**
  * @title SiteOwners
@@ -63,6 +64,9 @@ contract SiteOwners is ChainlinkClient, Ownable {
      */
     function verifyUrlOwner(string memory site) public returns (bytes32 requestId)
     {
+        // Validate url 
+        require(UrlUtils.validateUrl(site));
+
         // Get link to make transaction (user must have approved it first)
         _link.transferFrom(msg.sender, address(this), _fee);
 
