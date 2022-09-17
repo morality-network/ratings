@@ -68,7 +68,7 @@ contract Ratings is Ownable, IRatings{
         require(perPage <= _pageLimit, "Page limit exceeded");
 
         // Get the total amount remaining
-        uint256 totalRatings = getTotalUserRatings(userAddress);
+        uint256 totalRatings = _userRatingCounts[userAddress];
 
         // Get the index to start from
         uint256 startingIndex = pageNumber * perPage;
@@ -105,7 +105,7 @@ contract Ratings is Ownable, IRatings{
         require(perPage <= _pageLimit, "Page limit exceeded");
 
         // Get the total amount remaining
-        uint256 totalRatings = getTotalSiteRatings(site);
+        uint256 totalRatings = _siteRatingCounts[site];
 
         // Get the index to start from
         uint256 startingIndex = pageNumber * perPage;
@@ -171,12 +171,12 @@ contract Ratings is Ownable, IRatings{
     }
 
     // Get total sites ratings 
-    function getTotalSiteRatings(string memory site) external view returns(uint256 total){
+    function getTotalSiteRatings(string memory site) external override view returns(uint256 total){
         return _siteRatingCounts[site];
     }
 
     // Get a total user ratings 
-    function getTotalUserRatings(address userAddress) external view returns(uint256 total){
+    function getTotalUserRatings(address userAddress) external override view returns(uint256 total){
         return _userRatingCounts[userAddress];
     }
 

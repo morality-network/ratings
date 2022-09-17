@@ -3,6 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 // Contract to confirm user/site rating counts for payouts
 interface IRatings{
+
     // Get total sites ratings 
     function getTotalSiteRatings(string memory site) external view returns(uint256 total);
 
