@@ -7,5 +7,5 @@ interface ISiteOwners{
     /**
     * Get the owner for a site if exists
     */
-    function getSiteOwner(string memory site) external view returns(address);
+    function getSiteOwner(string memory site) external view returns(Models.SiteOwner memory siteOwner);
 }
