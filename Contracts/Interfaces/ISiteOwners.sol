@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
+import "https://github.com/morality-network/ratings/Contracts/Models/Models.sol";
+
 // Contract to confirm a site ownership from
 interface ISiteOwners{
     
