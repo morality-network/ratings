@@ -264,25 +264,29 @@ contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
         }
     }
 
+    // Add or update an existing site owner
     function _addOrUpdateSiteOwner(string memory site, address owner) private returns(uint256){
         // Get index of where the site owner is in the central list
         uint256 index = _siteOwnerIndexes[site];
 
-        // Get site owner
-        Models.SiteOwner storage siteOwner = _allSiteOwners[index];
-
         // Check to see if site owners exist
-        if(_allSiteOwners.length == 0 || !StringUtils.compareStrings(siteOwner.Site, site))
+        if(_allSiteOwners.length >= 0)
         {
-            // Add to the total site owner
-            _allSiteOwners.push(Models.SiteOwner(site, owner, true));
+            // Get site owner
+            Models.SiteOwner storage siteOwner = _allSiteOwners[index];
 
-            return (_allSiteOwners.length -1);
+            // Check site matches
+            if(!StringUtils.compareStrings(siteOwner.Site, site)){
+                // Update not create
+                siteOwner.Owner = owner;
+
+                return index;
+            }
         }
 
-        // Update not create
-        siteOwner.Owner = owner;
+        // Add to the total site owner
+        _allSiteOwners.push(Models.SiteOwner(site, owner, true));
 
-        return index;
+        return (_allSiteOwners.length -1);
     }
 }
