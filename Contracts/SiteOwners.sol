@@ -87,7 +87,7 @@ contract SiteOwners is ChainlinkClient, Ownable {
     /**
     * Get the site owner
     */
-    function getSiteOwner(string memory site) public view returns(address){
+    function getSiteOwner(string memory site) external view returns(address){
         return _siteOwners[site];
     }
 

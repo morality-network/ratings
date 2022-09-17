@@ -170,12 +170,12 @@ contract Ratings is Ownable{
     }
 
     // Get total sites ratings 
-    function getTotalSiteRatings(string memory site) public view returns(uint256 total){
+    function getTotalSiteRatings(string memory site) external view returns(uint256 total){
         return _siteRatingCounts[site];
     }
 
     // Get a total user ratings 
-    function getTotalUserRatings(address userAddress) public view returns(uint256 total){
+    function getTotalUserRatings(address userAddress) external view returns(uint256 total){
         return _userRatingCounts[userAddress];
     }
 
