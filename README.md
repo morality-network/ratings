@@ -2,4 +2,4 @@
 
 Ratings Dapp
 
-![Untitled](https://user-images.githubusercontent.com/7746153/190841702-e08b1b4c-b3af-48cf-9f75-f7fbfb71ebfb.svg)
+![Untitled](https://user-images.githubusercontent.com/7746153/190841758-c61c3a85-bbf4-4b3f-ae6b-5de0554cd730.svg)
