@@ -8,6 +8,13 @@ library Models{
         address Owner;
         bool Exists;
     }
+	
+	struct SiteOwnerRequest{
+        string Site;
+        address Owner;
+        bool Exists;
+        bool Confirmed;
+    }
 
     struct Rating {
        address User;
