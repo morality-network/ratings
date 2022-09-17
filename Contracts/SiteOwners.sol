@@ -7,13 +7,14 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.sol";
 import "https://github.com/morality-network/ratings/Contracts/Models/Models.sol";
+import "https://github.com/morality-network/ratings/Contracts/Interfaces/ISiteOwners.sol";
 
 /**
  * @title SiteOwners
  * @dev Manages site owners for the ratings contract
  */
 
-contract SiteOwners is ChainlinkClient, Ownable {
+contract SiteOwners is ChainlinkClient, Ownable, ISiteOwners {
     using Chainlink for Chainlink.Request;
 
     address private _oracle;

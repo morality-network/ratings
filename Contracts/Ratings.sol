@@ -4,6 +4,7 @@ pragma solidity >=0.7.0 <0.9.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "https://github.com/morality-network/ratings/Contracts/Libraries/Utils.sol";
 import "https://github.com/morality-network/ratings/Contracts/Models/Models.sol";
+import "https://github.com/morality-network/ratings/Contracts/Interfaces/IRatings.sol";
 
 /**
 
@@ -13,7 +14,7 @@ import "https://github.com/morality-network/ratings/Contracts/Models/Models.sol"
 
 */
 
-contract Ratings is Ownable{
+contract Ratings is Ownable, IRatings{
 
     // Sites total ratings
     mapping(string => Models.AggregateRating) private _siteAggregates;
