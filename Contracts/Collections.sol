@@ -129,7 +129,7 @@ contract Collections is Ownable {
     /**
     * Set the multiplier. Only owner can set
     */
-    function setPageLimit(uint256 newMultiplier) public onlyOwner{
+    function setMultiplier(uint256 newMultiplier) public onlyOwner{
          // Update the multiplier
          _multiplier = newMultiplier;
 
