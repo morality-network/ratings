@@ -22,9 +22,12 @@ contract Collections is Ownable {
     // Record of whats been paid out
     mapping(address => uint256) private _userPayouts;
     mapping(string => uint256) private _sitePayouts;
+    mapping(address => uint256) private _payoutTimes;
 
     // Multiplier for fee
     uint256 private _multiplier = 1000000000; // 1 Gwei default
+    uint256 private _maxPayoutPerPeriod = 100;
+    uint256 private _minimumPayoutPeriod = 1 days;
 
     // The contract events
     event UserPayout(address indexed user, uint256 indexed payoutAmount, uint256 indexed multiplier, uint256 time);
@@ -39,7 +42,10 @@ contract Collections is Ownable {
     }
 
     //
-    function lootUser() public{
+    function lootUser() external{
+        // Validate that user is out of cool down
+        require(_validatePayoutTime(msg.sender), "Please wait for cooldown period to finish");
+
         // Get the total ratings count for a user
         uint256 userRatingCount = _ratings.getTotalUserRatings(msg.sender);
 
@@ -59,11 +65,17 @@ contract Collections is Ownable {
         uint256 realizedPayoutValue = payoutValue * _multiplier;
         _token.transfer(address(this), realizedPayoutValue);
 
+        // Add to payout time
+        _payoutTimes[msg.sender] = TimeUtils.getTimestamp();
+
         // Emit event
         emit UserPayout(msg.sender, realizedPayoutValue, _multiplier, TimeUtils.getTimestamp());
     }
 
-    function lootSite(string memory site) public{
+    function lootSite(string memory site) external{
+        // Validate that user is out of cool down
+        require(_validatePayoutTime(msg.sender), "Please wait for cooldown period to finish");
+
         // Check caller is owner
         Models.SiteOwner memory owner = _siteOwners.getSiteOwner(site);
         require(owner.Owner == msg.sender, "Only owner can loot site");
@@ -86,6 +98,9 @@ contract Collections is Ownable {
         // Send the value to the user
         uint256 realizedPayoutValue = payoutValue * _multiplier;
         _token.transfer(address(this), realizedPayoutValue);
+
+        // Add to payout time
+        _payoutTimes[msg.sender] = TimeUtils.getTimestamp();
 
         // Emit event
         emit SitePayout(msg.sender, site, realizedPayoutValue, _multiplier, TimeUtils.getTimestamp());
@@ -146,5 +161,18 @@ contract Collections is Ownable {
 
         // Transfer the tokens from the contract to the owner
         token.transfer(owner(), amount);
+    }
+
+    // Check if cool down has finished
+    function _validatePayoutTime(address user) public view returns(bool){
+        // Get the last time a user was paid out
+        uint256 lastPayoutTime = _payoutTimes[user];
+
+        // Check the period has been exceeded
+        if((lastPayoutTime + _minimumPayoutPeriod) > TimeUtils.getTimestamp())
+            return false;
+        
+        // If the period has exceeded cooldown, it has finished
+        return true;
     }
 }

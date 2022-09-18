@@ -38,7 +38,7 @@ contract Ratings is Ownable, IRatings{
     event PageLimitUpdatedEvent(uint256 indexed newPageLimit, uint256 time);
 
     // Add a new or replace and existing rating
-    function addRating(string memory site, Models.RatingDto memory rating) public {
+    function addRating(string memory site, Models.RatingDto memory rating) external {
         // Validate url 
         require(UrlUtils.validateUrl(site));
 
