@@ -8,7 +8,7 @@ import "https://github.com/morality-network/ratings/Contracts/Interfaces/IUserRa
 * @dev Persists and manages ratings across the internet
 */
 
-contract Ratings is Ownable, IUserRatings{
+contract UserRatings is Ownable, IUserRatings{
 
     struct Rating {
        address UserRated;
@@ -18,6 +18,7 @@ contract Ratings is Ownable, IUserRatings{
        uint256 Field3;
        uint256 Field4;
        uint256 Field5;
+       string Message;
        uint256 DateRated;
     }
 
@@ -42,6 +43,7 @@ contract Ratings is Ownable, IUserRatings{
        uint256 Field3;
        uint256 Field4;
        uint256 Field5;
+       string Message;
     }
 
     struct RatingBound{
@@ -411,6 +413,7 @@ contract Ratings is Ownable, IUserRatings{
        oldRating.Field3 = rating.Field3;
        oldRating.Field4 = rating.Field4;
        oldRating.Field5 = rating.Field5;
+       oldRating.Message = rating.Message;
        oldRating.DateRated = getTimestamp();
 
        // Fire event
@@ -481,6 +484,7 @@ contract Ratings is Ownable, IUserRatings{
             createRating.Field3,
             createRating.Field4,
             createRating.Field5,
+            createRating.Message,
             getTimestamp()
          );
     }

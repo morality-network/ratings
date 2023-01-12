@@ -9,20 +9,7 @@ import "https://github.com/morality-network/ratings/Contracts/Interfaces/ISiteRa
 * @dev Persists and manages ratings across the internet
 */
 
-contract Ratings is Ownable, ISiteRatings{
-
-    struct SiteOwner{
-        string Site;
-        address Owner;
-        bool Exists;
-    }
-	
-	struct SiteOwnerRequest{
-        string Site;
-        address Owner;
-        bool Exists;
-        bool Confirmed;
-    }
+contract SiteRatings is Ownable, ISiteRatings{
 
     struct Rating {
        address User;
@@ -32,6 +19,7 @@ contract Ratings is Ownable, ISiteRatings{
        uint256 Field3;
        uint256 Field4;
        uint256 Field5;
+       string Message;
        uint256 DateRated;
     }
 
@@ -56,6 +44,7 @@ contract Ratings is Ownable, ISiteRatings{
        uint256 Field3;
        uint256 Field4;
        uint256 Field5;
+       string Message;
     }
 
     struct RatingBound{
@@ -428,6 +417,7 @@ contract Ratings is Ownable, ISiteRatings{
        oldRating.Field3 = rating.Field3;
        oldRating.Field4 = rating.Field4;
        oldRating.Field5 = rating.Field5;
+       oldRating.Message = rating.Message;
        oldRating.DateRated = getTimestamp();
 
        // Fire event
@@ -498,6 +488,7 @@ contract Ratings is Ownable, ISiteRatings{
             createRating.Field3,
             createRating.Field4,
             createRating.Field5,
+            createRating.Message,
             getTimestamp()
          );
     }
