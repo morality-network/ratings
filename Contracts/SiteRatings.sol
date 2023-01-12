@@ -9,7 +9,7 @@ import "https://github.com/morality-network/ratings/Contracts/Interfaces/ISiteRa
 * @dev Persists and manages ratings across the internet
 */
 
-contract Ratings is Ownable, IRatings{
+contract Ratings is Ownable, ISiteRatings{
 
     struct SiteOwner{
         string Site;

@@ -8,7 +8,7 @@ import "https://github.com/morality-network/ratings/Contracts/Interfaces/IUserRa
 * @dev Persists and manages ratings across the internet
 */
 
-contract Ratings is Ownable, IRatings{
+contract Ratings is Ownable, IUserRatings{
 
     struct Rating {
        address UserRated;
