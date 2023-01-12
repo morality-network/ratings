@@ -81,7 +81,10 @@ contract UserRatings is Ownable, IUserRatings{
 
     // The max page limit
     uint256 private _pageLimit = 50;
-
+	
+    // The max message length
+    uint256 private _maxMessageLength = 128;
+	
     // Rating settings
     RatingDefinition _definition = RatingDefinition(
         RatingBound(0,5),
@@ -101,6 +104,9 @@ contract UserRatings is Ownable, IUserRatings{
     function addRating(address subjectUser, RatingDto memory rating) external {
         // Validate bounds
         validateBounds(rating);
+		
+		// Validate message length
+        require(bytes(rating.Message).length <= _maxMessageLength, 'Message too long');
 
         // We check if there is already an index for this subjectUser/user
         Index memory userSubjectUserRatingIndex = _userSubjectUserRatingsIndex[msg.sender][subjectUser];
@@ -340,6 +346,17 @@ contract UserRatings is Ownable, IUserRatings{
 
          // Fire update event
          emit PageLimitUpdatedEvent(newPageLimit, getTimestamp());
+    }
+	
+	/**
+    * Set the message length limit. Only owner can set
+    */
+    function setMessageLengthLimit(uint256 maxMessageLength) public onlyOwner{
+         // Update
+         _maxMessageLength = maxMessageLength;
+
+         // Fire update event
+         emit MessageLengthLimitUpdatedEvent(maxMessageLength, getTimestamp());
     }
 
     /**

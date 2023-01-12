@@ -82,6 +82,9 @@ contract SiteRatings is Ownable, ISiteRatings{
 
     // The max page limit
     uint256 private _pageLimit = 50;
+    
+    // The max message length
+    uint256 private _maxMessageLength = 128;
 
     // Rating settings
     RatingDefinition _definition = RatingDefinition(
@@ -97,6 +100,7 @@ contract SiteRatings is Ownable, ISiteRatings{
     event EditedRating(string indexed site, address indexed user, uint256 newRating1, uint256 newRating2, uint256 newRating3, uint256 newRating4, uint256 newRating5, uint256 time);
     event PageLimitUpdatedEvent(uint256 indexed newPageLimit, uint256 time);
     event RatingDefinitionUpdatedEvent(address indexed user, uint256 time);
+    event MessageLengthLimitUpdatedEvent(uint256 maxMessageLength, uint256 time);
 
     // Add a new or replace and existing rating
     function addRating(string memory site, RatingDto memory rating) external {
@@ -105,6 +109,9 @@ contract SiteRatings is Ownable, ISiteRatings{
 
         // Validate bounds
         validateBounds(rating);
+
+        // Validate message length
+        require(bytes(rating.Message).length <= _maxMessageLength, 'Message too long');
 
         // We check if there is already an index for this site/user
         Index memory userSiteRatingIndex = _userSiteRatingsIndex[msg.sender][site];
@@ -344,6 +351,17 @@ contract SiteRatings is Ownable, ISiteRatings{
 
          // Fire update event
          emit PageLimitUpdatedEvent(newPageLimit, getTimestamp());
+    }
+
+    /**
+    * Set the message length limit. Only owner can set
+    */
+    function setMessageLengthLimit(uint256 maxMessageLength) public onlyOwner{
+         // Update
+         _maxMessageLength = maxMessageLength;
+
+         // Fire update event
+         emit MessageLengthLimitUpdatedEvent(maxMessageLength, getTimestamp());
     }
 
     /**
