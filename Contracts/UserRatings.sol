@@ -1,17 +1,7 @@
 pragma solidity =0.8.12.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-//import "https://github.com/morality-network/ratings/Contracts/Interfaces/IRatings.sol";
-
-// Contract to confirm user/subject user rating counts for payouts
-interface IRatings{
-
-    // Get total subject user ratings 
-    function getTotalSubjectUsersRatings(address subjectUser) external view returns(uint256 total);
-
-    // Get a total user ratings 
-    function getTotalUsersRatedsRatings(address userAddress) external view returns(uint256 total);
-}
+import "https://github.com/morality-network/ratings/Contracts/Interfaces/IUserRatings.sol";
 
 /**
 * @title Ratings

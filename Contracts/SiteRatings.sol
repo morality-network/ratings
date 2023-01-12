@@ -2,7 +2,7 @@
 pragma solidity =0.8.12.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "https://github.com/morality-network/ratings/Contracts/Interfaces/IRatings.sol";
+import "https://github.com/morality-network/ratings/Contracts/Interfaces/ISiteRatings.sol";
 
 /**
 * @title Ratings
