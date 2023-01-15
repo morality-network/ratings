@@ -19,7 +19,6 @@ contract SiteRatings is Ownable, ISiteRatings{
        uint256 Field3;
        uint256 Field4;
        uint256 Field5;
-       string Message;
        uint256 DateRated;
     }
 
@@ -44,7 +43,6 @@ contract SiteRatings is Ownable, ISiteRatings{
        uint256 Field3;
        uint256 Field4;
        uint256 Field5;
-       string Message;
     }
 
     struct RatingBound{
@@ -82,9 +80,6 @@ contract SiteRatings is Ownable, ISiteRatings{
 
     // The max page limit
     uint256 private _pageLimit = 50;
-    
-    // The max message length
-    uint256 private _maxMessageLength = 128;
 
     // Rating settings
     RatingDefinition _definition = RatingDefinition(
@@ -100,7 +95,6 @@ contract SiteRatings is Ownable, ISiteRatings{
     event EditedRating(string indexed site, address indexed user, uint256 newRating1, uint256 newRating2, uint256 newRating3, uint256 newRating4, uint256 newRating5, uint256 time);
     event PageLimitUpdatedEvent(uint256 indexed newPageLimit, uint256 time);
     event RatingDefinitionUpdatedEvent(address indexed user, uint256 time);
-    event MessageLengthLimitUpdatedEvent(uint256 maxMessageLength, uint256 time);
 
     // Add a new or replace and existing rating
     function addRating(string memory site, RatingDto memory rating) external {
@@ -109,9 +103,6 @@ contract SiteRatings is Ownable, ISiteRatings{
 
         // Validate bounds
         validateBounds(rating);
-
-        // Validate message length
-        require(bytes(rating.Message).length <= _maxMessageLength, 'Message too long');
 
         // We check if there is already an index for this site/user
         Index memory userSiteRatingIndex = _userSiteRatingsIndex[msg.sender][site];
@@ -354,17 +345,6 @@ contract SiteRatings is Ownable, ISiteRatings{
     }
 
     /**
-    * Set the message length limit. Only owner can set
-    */
-    function setMessageLengthLimit(uint256 maxMessageLength) public onlyOwner{
-         // Update
-         _maxMessageLength = maxMessageLength;
-
-         // Fire update event
-         emit MessageLengthLimitUpdatedEvent(maxMessageLength, getTimestamp());
-    }
-
-    /**
     * Set the rating min/max values. Only owner can set
     */
     function setRatingDefinition(RatingDefinition memory definition) public onlyOwner{
@@ -435,7 +415,6 @@ contract SiteRatings is Ownable, ISiteRatings{
        oldRating.Field3 = rating.Field3;
        oldRating.Field4 = rating.Field4;
        oldRating.Field5 = rating.Field5;
-       oldRating.Message = rating.Message;
        oldRating.DateRated = getTimestamp();
 
        // Fire event
@@ -506,7 +485,6 @@ contract SiteRatings is Ownable, ISiteRatings{
             createRating.Field3,
             createRating.Field4,
             createRating.Field5,
-            createRating.Message,
             getTimestamp()
          );
     }

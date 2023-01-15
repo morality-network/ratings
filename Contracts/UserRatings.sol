@@ -18,7 +18,6 @@ contract UserRatings is Ownable, IUserRatings{
        uint256 Field3;
        uint256 Field4;
        uint256 Field5;
-       string Message;
        uint256 DateRated;
     }
 
@@ -43,7 +42,6 @@ contract UserRatings is Ownable, IUserRatings{
        uint256 Field3;
        uint256 Field4;
        uint256 Field5;
-       string Message;
     }
 
     struct RatingBound{
@@ -81,10 +79,7 @@ contract UserRatings is Ownable, IUserRatings{
 
     // The max page limit
     uint256 private _pageLimit = 50;
-	
-    // The max message length
-    uint256 private _maxMessageLength = 128;
-	
+
     // Rating settings
     RatingDefinition _definition = RatingDefinition(
         RatingBound(0,5),
@@ -104,9 +99,6 @@ contract UserRatings is Ownable, IUserRatings{
     function addRating(address subjectUser, RatingDto memory rating) external {
         // Validate bounds
         validateBounds(rating);
-		
-		// Validate message length
-        require(bytes(rating.Message).length <= _maxMessageLength, 'Message too long');
 
         // We check if there is already an index for this subjectUser/user
         Index memory userSubjectUserRatingIndex = _userSubjectUserRatingsIndex[msg.sender][subjectUser];
@@ -133,17 +125,17 @@ contract UserRatings is Ownable, IUserRatings{
     }
 
     // Gets a single rating for a user-subject user
-    function getRating(address userRated, address subjectUser) public view returns(Rating memory rating){
-        // Get the index of the user/site rating
+	function getRating(address userRated, address subjectUser) public view returns(Rating memory rating){
+		// Get the index of the user/site rating
         Index memory userIndex = _userSubjectUserRatingsIndex[userRated][subjectUser];
-        
-        require(userIndex.Exists, "No user-subject user rating exists");
+		
+		require(userIndex.Exists, "No user-subject user rating exists");
 
         // Get the users existing rating for the site
         rating = _allRatings[userIndex.Position];
 
         return rating;
-    }
+	}
 
     // Gets paged aggregate ratings for a site
     function getAggregateRatings(uint256 pageNumber, uint256 perPage) public view returns(AggregateRating[] memory aggregateRatings){
@@ -347,17 +339,6 @@ contract UserRatings is Ownable, IUserRatings{
          // Fire update event
          emit PageLimitUpdatedEvent(newPageLimit, getTimestamp());
     }
-	
-	/**
-    * Set the message length limit. Only owner can set
-    */
-    function setMessageLengthLimit(uint256 maxMessageLength) public onlyOwner{
-         // Update
-         _maxMessageLength = maxMessageLength;
-
-         // Fire update event
-         emit MessageLengthLimitUpdatedEvent(maxMessageLength, getTimestamp());
-    }
 
     /**
     * Set the rating min/max values. Only owner can set
@@ -430,7 +411,6 @@ contract UserRatings is Ownable, IUserRatings{
        oldRating.Field3 = rating.Field3;
        oldRating.Field4 = rating.Field4;
        oldRating.Field5 = rating.Field5;
-       oldRating.Message = rating.Message;
        oldRating.DateRated = getTimestamp();
 
        // Fire event
@@ -501,7 +481,6 @@ contract UserRatings is Ownable, IUserRatings{
             createRating.Field3,
             createRating.Field4,
             createRating.Field5,
-            createRating.Message,
             getTimestamp()
          );
     }
