@@ -89,6 +89,35 @@ contract ProfileInformation is Ownable{
         return _accountDetails[existingIndex.Position];
     }
 
+     function getUsersAccountDetail(address[] memory users) public view returns(AccountDetails[] memory){
+         // Validate page limit
+        require(users.length <= _pageLimit, "Page limit exceeded");
+
+        // Create the page
+        AccountDetails[] memory page = new AccountDetails[](users.length);
+
+        for(uint256 i = 0;i<users.length;i++)
+        {
+            // Get the user
+            address user = users[i];
+
+            // Try to get the users items index
+            Index memory existingIndex =  _accountDetailIndexes[user];
+        
+            // Check exists
+            require(existingIndex.Exists, 'Account details dont exist for specified user');
+
+            // Get the item at index
+            AccountDetails memory accountDetail =_accountDetails[existingIndex.Position];
+
+            // Add to page
+            page[i] = accountDetail;
+        }
+
+        // Return the page of account details
+        return page;
+    }
+
     /**
     * Get the page limit
     */
